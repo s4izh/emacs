@@ -1,0 +1,1146 @@
+#+title: emacs config
+
+* System settings
+
+#+begin_src emacs-lisp
+  (require 'subr-x)
+  (setq ss/is-termux
+        (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
+
+  (setq ss/is-linux-system (and (eq system-type 'gnu/linux)))
+
+  (setq ss/computer
+        (with-temp-buffer
+          (insert-file-contents "/etc/hostname")
+          (string-trim (buffer-string))))
+#+end_src
+
+* Package Management
+** standard
+
+#+begin_src emacs-lisp
+  (require 'package)
+  (setq package-enable-at-startup nil)
+
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
+
+  (package-initialize)
+
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+
+#+end_src
+
+** straight.el
+
+#+begin_src emacs-lisp
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+	(bootstrap-version 5))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+	  (url-retrieve-synchronously
+	   "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	   'silent 'inhibit-cookies)
+	(goto-char (point-max))
+	(eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+
+  ;; Always use straight to install on systems other than Linux
+  (setq straight-use-package-by-default (not (eq system-type 'gnu/linux)))
+
+  ;; Use straight.el for use-package expressions
+  (straight-use-package 'use-package)
+
+  ;; Load the helper package for commands like `straight-x-clean-unused-repos'
+  (require 'straight-x)
+#+end_src
+
+* Functionality settings
+** Async
+async when available
+#+begin_src emacs-lisp
+  (use-package async
+    :ensure t
+    :defer t
+    :init
+    (dired-async-mode 1))
+#+end_src
+
+** Disable backups and auto-saves
+
+#+begin_src emacs-lisp
+  (setq make-backup-files nil)
+  (setq auto-save-default nil)
+#+end_src
+
+** Change yes-or-no questions into y-or-n questions
+
+#+BEGIN_SRC emacs-lisp
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+** Clean folders
+
+#+begin_src emacs-lisp
+  (setq user-emacs-directory "~/.cache/emacs")
+  (use-package no-littering
+    :ensure t)
+
+  ;; no-littering doesn't set this by default so we must place
+  ;; auto save files in the same path as it uses for sessions
+  (setq auto-save-file-name-transforms
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+
+  (setq custom-file (locate-user-emacs-file "custom-vars.el"))
+
+  (setq backup-directory-alist
+        `((".*" . ,temporary-file-directory)))
+
+  (setq auto-save-file-name-transforms
+        `((".*" ,temporary-file-directory t))) (load custom-file 'noerror 'nomessage)
+#+end_src
+
+** Auto-revert
+
+#+begin_src emacs-lisp
+  ;; Revert buffers when the underlying file has changed
+  (global-auto-revert-mode 1)
+  ;; Revert Dired and other buffers
+  (setq global-auto-revert-non-file-buffers t)
+#+end_src
+
+* Keyboard settings
+** Esc Cancels All
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+** Rebind C-u
+I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u=
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-M-u") 'universal-argument)
+#+end_src
+
+** Evil
+
+#+begin_src emacs-lisp
+  (defun ss/evil-hook ()
+    (dolist (mode '(custom-mode
+                    eshell-mode
+                    git-rebase-mode
+                    erc-mode
+                    circe-server-mode
+                    circe-chat-mode
+                    circe-query-mode
+                    sauron-mode
+                    term-mode))
+      (add-to-list 'evil-emacs-state-modes mode)))
+
+  (use-package undo-tree
+    :ensure t
+    :config
+    (setq undo-tree-history-directory-alist
+          '(("." . "~/.cache/emacs/undo-history")))
+    :init
+    (global-undo-tree-mode 1))
+
+  (use-package evil
+    :ensure t
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    ;; (setq evil-want-C-i-jump nil)
+    (setq evil-respect-visual-line-mode t) ;; basically gj gk etc
+    (setq evil-want-Y-yank-to-eol t)
+    ;; (setq evil-want-minibuffer t)
+    (setq evil-undo-system 'undo-tree)
+    :config
+    (add-hook 'evil-mode-hook 'ss/evil-hook)
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
+
+  (use-package evil-commentary
+    :ensure t
+    :after evil
+    :bind (:map evil-normal-state-map
+                ("gc" . evil-commentary)))
+
+  (use-package evil-collection
+    :ensure t
+    :after evil
+    :init
+    (setq evil-collection-company-use-tng nil)  ;; Is this a bug in evil-collection?
+    :custom
+    (evil-collection-outline-bind-tab-p nil)
+    :config
+    (setq evil-collection-mode-list
+          (remove 'lispy evil-collection-mode-list))
+    (evil-collection-init))
+
+  (define-key evil-ex-map "e" 'find-file)
+  (define-key evil-ex-map "W" 'save-buffer)
+#+end_src
+
+** Which key
+
+#+begin_src emacs-lisp
+  (use-package which-key
+    :ensure t
+    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 0.3))
+#+end_src
+
+** Leader Bindings (general.el)
+
+#+begin_src emacs-lisp
+  (use-package general
+    :ensure t
+    :config
+    (general-evil-setup t)
+    (general-create-definer ss/leader-key-def
+      :keymaps '(normal insert visual emacs)
+      :prefix "SPC"
+      :global-prefix "C-SPC")
+    (general-create-definer ss/ctrl-c-keys
+      :prefix "C-c"))
+
+  (ss/leader-key-def
+    "ff" '(counsel-find-file :which-key "find file")
+    "t"  '(:ignore t :which-key "ui toggles")
+    "jc"  '(:ignore t :which-key "config files")
+    "tt" '(counsel-load-theme :which-key "choose theme")
+    "bi"  '(ibuffer :which-key "go to ibuffer")
+    "bb"  '(counsel-switch-buffer :which-key "counsel-switch-buffer")
+    "bk"  '(kill-buffer :which-key "kill-buffer")
+    "h"  '(previous-buffer :which-key "previous-buffer")
+    "l"  '(next-buffer :which-key "next-buffer")
+    "c"  '(compile :which-key "compile")
+    "d" '(lambda () (interactive) (find-file (expand-file-name ".")))
+    "js" '(lambda () (interactive) (counsel-find-file "~/.local/scripts"))
+    "ju" '(lambda () (interactive) (find-file (expand-file-name "~/uni/3q1")))
+    "ji" '(lambda () (interactive) (find-file (expand-file-name "~/notes/inbox.org")))
+    "jcd" '(lambda () (interactive) (find-file (expand-file-name "~/.local/src/dwm/config.h")) :which-key "emacs config")
+    "jce" '(lambda () (interactive) (find-file (expand-file-name "~/.config/emacs/config.org"))) :which-key "emacs config")
+
+  (global-set-key (kbd "<f5>") #'recompile)
+
+#+end_src
+
+podria añadir:
+
+- kill buffer / kill current buffer
+- find file
+- find project file
+- live grep
+- shortcuts para ir a directorios
+- dired
+
+** Hydra Bindings
+
+Function to increase/decrease the text scale
+
+#+begin_src emacs-lisp
+ (use-package hydra
+    :ensure t)
+
+    (defhydra hydra-text-scale (:timeout 4)
+      "scale text"
+      ("j" text-scale-increase "in")
+      ("k" text-scale-decrease "out")
+      ("q" nil "quit" :exit t))
+    (ss/leader-key-def
+      "ts" '(hydra-text-scale/body :which-key "scale text"))
+#+end_src
+
+Function to change the size of the windows
+
+#+begin_src emacs-lisp
+  (defhydra hydra-window-scale (:timeout 4)
+    "scale text"
+    ("h" evil-window-decrease-width "decrease width")
+    ("j" evil-window-increase-height "increase height")
+    ("k" evil-window-decrease-height "decrease width")
+    ("l" evil-window-increase-width "increase width")
+    ;; ("k" text-scale-decrease "out")
+    ("q" nil "quit" :exit t))
+  (ss/leader-key-def
+    "w" '(hydra-window-scale/body :which-key "change window size"))
+#+end_src
+
+* Appearance
+** Theme
+*** pywal
+
+#+begin_src emacs-lisp
+  (use-package ewal-doom-themes
+    :ensure t)
+  (load-theme 'ewal-doom-one t)
+#+end_src
+
+*** modus
+I like basic themes,
+use =M-x modus-themes-toggle= to change from dark to light theme.
+
+#+begin_src emacs-lisp
+  ;; Configure the Modus Themes' appearance
+  (setq ;;modus-themes-mode-line '(accented borderless)
+        modus-themes-bold-constructs t
+        modus-themes-italic-constructs t
+        ;; modus-themes-fringes 'subtle
+        modus-themes-tabs-accented t
+        modus-themes-paren-match '(bold intense)
+        ;; modus-themes-prompts '(bold intense)
+        modus-themes-completions 'opinionated
+        modus-themes-org-blocks 'gray-background
+        ;; modus-themes-org-blocks 'tinted-background
+        ;; modus-themes-scale-headings t
+        modus-themes-region '(bg-only))
+
+  ;; Load the dark theme by default
+  ;; (load-theme 'modus-vivendi t)
+
+#+end_src
+
+*** Doom
+I keep this if I want to use a doom theme
+
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-themes
+    :ensure t)
+
+  ;; (load-theme 'doom-solarized-dark t)
+  ;; (load-theme 'doom-tomorrow-night t)
+  ;; (load-theme 'doom-spacegrey t)
+  ;; (load-theme 'doom-gruvbox t)
+#+END_SRC
+
+*** Spaceway
+
+#+begin_src emacs-lisp
+  ;; (use-package spaceway-theme
+  ;;   :ensure nil
+  ;;   :load-path "~/.config/emacs/spaceway/"
+  ;;   :config
+  ;;   (global-hl-line-mode t)
+  ;;   (set-cursor-color "#dc322f"))
+  ;; (load-theme 'spaceway t)
+  #+end_src
+
+*** Doom Modeline
+
+#+begin_src emacs-lisp
+  ;; (use-package doom-modeline
+  ;;   :init (doom-modeline-mode 1))
+#+end_src
+
+** Font
+
+#+begin_src emacs-lisp
+  ;; (add-to-list 'default-frame-alist
+  ;;              '(font . "JetBrains Mono-13"))
+
+  (if (equal ss/computer "zen")
+      (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
+    (add-to-list 'default-frame-alist '(font . "JetBrains Mono-13")))
+
+#+end_src
+
+** Looks
+*** Clean the UI
+
+#+begin_src emacs-lisp
+  (setq inhibit-startup-message t)
+  ;; (setq initial-buffer-choice "*dashboard*")
+
+  (unless ss/is-termux
+    (scroll-bar-mode -1)        ; Disable visible scrollbar
+    (tool-bar-mode -1)          ; Disable the toolbar
+    (tooltip-mode -1)           ; Disable tooltips
+    (set-fringe-mode 10))
+
+  (menu-bar-mode -1)            ; Disable the menu bar
+  (setq ring-bell-function 'ignore)
+  (display-battery-mode t)
+
+#+end_src
+
+*** Set UTF-8 encoding
+
+#+begin_src emacs-lisp
+  (setq locale-coding-system 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+#+end_src
+
+*** Dashboard
+
+#+begin_src emacs-lisp
+  (use-package dashboard
+    :ensure t
+    :config
+    (dashboard-setup-startup-hook))
+#+end_src
+
+*** Better scrolling
+
+#+begin_src emacs-lisp
+  (unless ss/is-termux
+    (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
+    (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+    (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+    (setq scroll-step 1) ;; keyboard scroll one line at a time
+    (setq scroll-margin '3)
+    (setq use-dialog-box nil)) ;; Disable dialog boxes since
+
+#+end_src
+
+*** Line numbers
+
+#+begin_src emacs-lisp
+  (column-number-mode)
+  (global-display-line-numbers-mode)
+  (setq display-line-numbers-type 'relative)
+  (set-default 'truncate-lines t)
+
+  ;; Enable line numbers for some modes
+  (dolist (mode '(text-mode-hook
+                  prog-mode-hook
+                  conf-mode-hook))
+    (add-hook mode (lambda () (display-line-numbers-mode 1))))
+
+  (dolist (mode '(org-mode-hook
+                  term-mode-hook
+                  vterm-mode-hook
+                  shell-mode-hook
+                  eshell-mode-hook))
+    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+#+end_src
+
+** Rainbow mode
+Show hexa colors
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :ensure t
+  :init (add-hook 'prog-mode-hook 'rainbow-mode))
+#+end_src
+
+** Diminish
+
+#+begin_src emacs-lisp
+  (use-package diminish
+    :ensure t
+    :init
+    (diminish 'which-key-mode)
+    (diminish 'linum-relative-mode)
+    (diminish 'hungry-delete-mode)
+    (diminish 'visual-line-mode)
+    (diminish 'subword-mode)
+    (diminish 'beacon-mode)
+    (diminish 'irony-mode)
+    (diminish 'page-break-lines-mode)
+    (diminish 'auto-revert-mode)
+    (diminish 'rainbow-delimiters-mode)
+    (diminish 'rainbow-mode)
+    (diminish 'yas-minor-mode)
+    (diminish 'flycheck-mode)
+    (diminish 'helm-mode))
+#+end_src
+
+* Editing Configuration
+** Tab configs
+
+#+begin_src emacs-lisp
+  ;; tab widths
+  (setq-default tab-width 2)
+  (setq-default evil-shift-width tab-width)
+  ;; spaces instead of tabs
+  (setq-default indent-tabs-mode nil)
+#+end_src
+
+** Auto-pair
+
+#+begin_src emacs-lisp
+  (use-package smartparens
+    :ensure t
+    :hook (prog-mode . smartparens-mode))
+#+end_src
+
+** Rainbow delimeters
+
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :init
+    :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+
+** Automatically clean whitespaces
+
+#+begin_src emacs-lisp
+  (use-package ws-butler
+    :ensure t
+    :hook ((text-mode . ws-butler-mode)
+           (prog-mode . ws-butler-mode)))
+#+end_src
+
+* Completions
+** Ivy
+
+#+begin_src emacs-lisp
+  (use-package ivy
+    :ensure t
+    :diminish ivy-mode
+    :bind (("C-s" . swiper)
+           :map ivy-minibuffer-map
+           ("TAB" . ivy-alt-done)
+           ("C-l" . ivy-alt-done)
+           ("C-j" . ivy-next-line)
+           ("C-k" . ivy-previous-line)
+           :map ivy-switch-buffer-map
+           ("C-k" . ivy-previous-line)
+           ("C-l" . ivy-done)
+           ("C-d" . ivy-switch-buffer-kill)
+           :map ivy-reverse-i-search-map
+           ("C-k" . ivy-previous-line)
+           ("C-d" . ivy-reverse-i-search-kill))
+    :config
+    (ivy-mode 1))
+
+  (use-package ivy-rich
+    :ensure t
+    :init
+    (ivy-rich-mode 1))
+
+  (use-package counsel
+    :ensure t
+    :bind (("M-x" . counsel-M-x)
+           ("C-x b" . counsel-ibuffer)
+           ("C-x C-f" . counsel-find-file)
+           :map minibuffer-local-map
+           ("C-r" . 'counsel-minibuffer-history))
+    :config
+    (setq ivy-initial-inputs-alist nil)) ; don't starch searches with ^
+
+  ;; (global-set-key (kbd "C-M-j") 'counsel-switch-buffer)
+#+end_src
+
+** helpful
+
+#+begin_src emacs-lisp
+  (use-package helpful
+    :ensure t
+    :custom
+    (counsel-describe-function-function #'helpful-callable)
+    (counsel-describe-variable-function #'helpful-variable)
+    :bind
+    ([remap describe-function] . counsel-describe-function)
+    ([remap describe-command] . helpful-command)
+    ([remap describe-variable] . counsel-describe-variable)
+    ([remap describe-key] . helpful-key))
+#+end_src
+
+* File Management
+** Dired
+
+#+begin_src emacs-lisp
+  ;; (use-package all-the-icons-dired)
+
+  (use-package dired
+    :ensure nil
+    ;; :straight nil
+    :defer 1
+    :commands (dired dired-jump)
+    :config
+    (setq ;;dired-listing-switches "-ahgo --group-directories-first"
+    ;; (setq dired-listing-switches "-agho --group-directories-first"
+          ;; dired-omit-files "^\\.[^.].*"
+          dired-omit-verbose nil
+          dired-hide-details-hide-symlink-targets nil
+          delete-by-moving-to-trash t)
+
+    (autoload 'dired-omit-mode "dired-x")
+
+    (use-package dired-single
+      :ensure t
+      :defer t)
+
+    (use-package dired-ranger
+      :ensure t
+      :defer t)
+
+    (use-package dired-collapse
+      :ensure t
+      :defer t)
+
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "h" 'dired-single-up-directory
+      "H" 'dired-omit-mode
+      "l" 'dired-single-buffer
+      "y" 'dired-ranger-copy
+      "X" 'dired-ranger-move
+      "p" 'dired-ranger-paste))
+
+  ;; (defun ss/dired-link (path)
+  ;;   (lexical-let ((target path))
+  ;;     (lambda () (interactive) (message "Path: %s" target) (dired target))))
+
+  ;; (ss/leader-key-def
+  ;;   "d"   '(:ignore t :which-key "dired")
+  ;;   "dd"  '(dired :which-key "Here"))
+    ;; "dh"  `(,(dw/dired-link "~") :which-key "Home")
+    ;; "dn"  `(,(dw/dired-link "~/Notes") :which-key "Notes")
+    ;; "do"  `(,(dw/dired-link "~/Downloads") :which-key "Downloads")
+    ;; "dp"  `(,(dw/dired-link "~/Pictures") :which-key "Pictures")
+    ;; "dv"  `(,(dw/dired-link "~/Videos") :which-key "Videos")
+    ;; "d."  `(,(dw/dired-link "~/.dotfiles") :which-key "dotfiles")
+    ;; "de"  `(,(dw/dired-link "~/.emacs.d") :which-key ".emacs.d"))
+#+end_src
+
+** Open Files Externally
+
+#+begin_src emacs-lisp
+  (use-package openwith
+    :ensure t
+    :if (not ss/is-termux)
+    :config
+    (setq openwith-associations
+          (list
+           (list (openwith-make-extension-regexp
+                  '("mpg" "mpeg" "mp3" "mp4"
+                    "avi" "wmv" "wav" "mov" "flv"
+                    "ogm" "ogg" "mkv"))
+                 "mpv"
+                 '(file))
+           ;; (list (openwith-make-extension-regexp
+           ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
+           ;;          "png" "gif" "bmp" "tif" "jpeg"))
+           ;;       ;; Removed jpg because Telega
+           ;;       ;; caused feh to be opened...
+           ;;       ;; "feh"
+           ;;          "sxiv"
+           ;;       '(file))
+           (list (openwith-make-extension-regexp
+                  '("pdf"))
+                 "firefox"
+                 '(file))))
+    (openwith-mode t))
+#+end_src
+
+* Development
+** Magit
+[[https://www.youtube.com/watch?v=INTu30BHZGk&list=PLEoMzSkcN8oPH1au7H6B7bBJ4ZO7BXjSZ&index=5][git video from system crafters]]
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :ensure t
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+#+end_src
+
+#+begin_src emacs-lisp
+  (ss/leader-key-def
+    "g"  '(:ignore t :which-key "toggles")
+    "gs" '(magit-status :which-key "git status"))
+#+end_src
+
+** Forge
+View issues, respond github messages bla bla from emacs
+
+#+begin_src emacs-lisp
+  ;; NOTE: Make sure to configure a GitHub token before using this package!
+  ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
+  ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
+  ;; (use-package forge)
+#+end_src
+
+* System Administration
+** Tramp
+
+#+begin_src emacs-lisp
+(setq tramp-default-method "ssh")
+#+end_src
+
+** systemd-mode
+
+#+begin_src emacs-lisp
+(use-package systemd
+  :ensure t)
+#+end_src
+
+** Sudo
+Edit files as sudo.
+
+#+begin_src emacs-lisp
+(defun ss/find-file-sudo (file)
+  "Opens FILE with root privileges."
+  (interactive "fFile: ")
+  (set-buffer (find-file (concat "/sudo::" file))))
+#+end_src
+
+Edit files as root in the remote.
+
+#+begin_src emacs-lisp
+(defun ss/find-file-root-remote (file)
+  "Opens FILE on a remote server with root privileges."
+  (interactive "fFile: ")
+  (set-buffer (find-file (concat "/ssh:root@server:" file))))
+#+end_src
+
+Do it as user, with sudo.
+
+#+begin_src emacs-lisp
+(defun ss/find-file-sudo-remote (file)
+  "Opens FILE on a remote server with sudo privileges."
+  (interactive "fFile: ")
+  (set-buffer (find-file (concat "/ssh:yourusername@server|sudo:server:" file))))
+#+end_src
+
+** VM management
+
+#+begin_src emacs-lisp
+      (defun start-vm-and-mount-filesystem (vm-name mount-directory)
+        (let ((command (format "virsh start %s" vm-name)))
+          (start-process-shell-command command nil command)
+          (while (not (equal (shell-command-to-string (format "virsh domstate %s" vm-name)) "running\n"))
+            (sleep-for 1))
+          (let ((command (format "sshfs alumne@%s:/home/alumne/zeos %s" vm-name mount-directory)))
+            (start-process-shell-command command nil command))))
+
+      (defun start-vm (vm-name)
+        (let ((command (format "virsh start %s" vm-name)))
+          (start-process-shell-command command nil command)))
+
+      (defun stop-vm (vm-name)
+        (let ((command (format "virsh shutdown %s" vm-name)))
+          (start-process-shell-command command nil command)))
+
+      (defun wait-vm-to-start (vm-name)
+        (while (not (equal (shell-command-to-string (format "virsh domstate %s" vm-name)) "running\n"))
+          (sleep-for 1)))
+
+      (defun check-vm-running (vm-name)
+        (while (not (equal (shell-command-to-string (format "virsh domstate %s" vm-name)) "running\n"))
+          (sleep-for 1)))
+
+      (defun mount-vm-filesystem (vm-name vm-directory mount-directory)
+        (let ((vm-path (format "%s:%s" vm-name vm-directory)))
+            (call-process "sshfs" nil "*sshfs output*" nil vm-path mount-directory)))
+        ;; (let ((command (format "sshfs alumne@%s:%s %s" vm-name vm-directory mount-directory)))
+        ;;   (start-process-shell-command command nil command)))
+
+      (defun umount-vm-filesystem (mount-directory)
+            (call-process "fusermount" nil "*fusermount output*" nil "-zu" mount-directory))
+
+      (defun machine-accessible-p (host)
+        "Check if the specified host is accessible via SSH."
+        (let ((ssh-output (shell-command-to-string (concat "ssh -q -o BatchMode=yes -o ConnectTimeout=5 " host " echo ok 2>&1"))))
+          (string-equal ssh-output "ok\n")))
+
+      (defun wait-for-machine-access (host timeout)
+        "Wait for the specified host to be accessible via SSH, for a maximum of 'timeout' seconds."
+        (let ((start-time (float-time))
+              (current-time (float-time))
+              (elapsed-time 0))
+          (while (and (< elapsed-time timeout)
+                      (not (machine-accessible-p host)))
+            (setq current-time (float-time))
+            (setq elapsed-time (- current-time start-time))
+            (sleep-for 1))
+          (if (< elapsed-time timeout)
+              (print (concat host " is now accessible via SSH."))
+            (print (concat "Timeout reached. " host " is still not accessible via SSH.")))))
+
+    (defun ss/zeos-on ()
+      (interactive)
+      (if (not (machine-accessible-p "sistemes"))
+          (progn
+            (start-vm "sistemes")
+            (wait-for-machine-access "sistemes" 100)
+            (mount-vm-filesystem "sistemes" "/home/alumne/zeos" "/home/sergio/uni/3q2/soa/zeos"))
+        (print "machine was already on"))
+      (let ((uni-path (getenv "UNI_PATH")))
+        (find-file (concat uni-path "/3q2/soa/zeos"))))
+
+      ;; (ss/zeos-start)
+
+    (defun ss/zeos-off ()
+      (interactive)
+      (stop-vm "sistemes")
+      (umount-vm-filesystem vm/zeos-mountpoint))
+
+      ;; (start-vm "sistemes")
+      ;; (wait-vm-to-start "sistemes")
+      ;; (mount-vm-filesystem "sistemes" "/home/alumne/zeos" "/home/sergio/test")
+
+  ;; custom variables for vm mountpoints
+  (let ((uni-path (getenv "soa")))
+    (setq vm/zeos-mountpoint (concat uni-path "/3q2/soa/zeos")))
+
+
+
+#+end_src
+
+* Org Mode
+** Setup
+
+#+begin_src emacs-lisp
+  (defun efs/org-mode-setup ()
+    ;; (variable-pitch-mode 1)
+    (org-indent-mode)
+    (visual-line-mode 1))
+
+  (use-package org
+    :ensure t
+    ;; :hook (org-mode . efs/org-mode-setup)
+    :config
+    (setq org-ellipsis " ▾")
+    (setq org-hide-emphasis-markers t)
+    (setq org-agenda-start-with-log-mode t)
+    (setq org-log-done 'time)
+    (setq org-src-tab-acts-natively t)
+    (setq org-log-into-drawer t)
+    (setq org-startup-indented t)           ;; Indent according to section
+    (setq org-startup-with-inline-images t) ;; Display images in-buffer by default
+    (setq org-startup-folded t)
+    (setq org-capture-templates
+          '(("t" "Task" entry  (file+headline "~/notes/inbox.org" "Tasks") "** TODO %?\nContext: %a\n")
+            ("i" "Idea" entry  (file+headline "~/notes/inbox.org" "Ideas") "** %?\nContext: %a\n")
+
+            ("u" "Uni entries")
+            ("uc" "CPD" entry  (file+headline "~/notes/uni/cpd.org" "Tasks") "** %?\nContext: %a\n")
+            ("us" "SOA" entry  (file+headline "~/notes/uni/soa.org" "Tasks") "** %?\nContext: %a\n")
+            ("ux" "SDX" entry  (file+headline "~/notes/uni/sdx.org" "Tasks") "** %?\nContext: %a\n")
+            ("ut" "TXC" entry  (file+headline "~/notes/uni/txc.org" "Tasks") "** %?\nContext: %a\n")
+            ("up" "PTI" entry  (file+headline "~/notes/uni/pti.org" "Tasks") "** %?\nContext: %a\n")
+
+            ("p" "Project entries")
+            ("pz" "ZeOS" entry  (file+headline "~/notes/uni/soa.org" "ZeOS") "** %?\nContext: %a\n")
+
+            ("j" "Journal" entry (file+datetree "~/notes/journal.org")
+             "* %?\nEntered on %U\n  %i\n  %a"))))
+
+  ;; when org-hide-emphasis-markers is on it shows
+  ;; the markup symbols when the cursor is place inside the word
+  (use-package org-appear
+    :ensure t
+    :hook (org-mode . org-appear-mode))
+#+end_src
+
+** Searching
+
+#+begin_src emacs-lisp
+  (defun ss/search-org-files ()
+    (interactive)
+    (counsel-rg "" "~/notes" nil "Search Notes: "))
+#+end_src
+
+** Bindings
+
+#+begin_src emacs-lisp
+    (use-package evil-org
+      :ensure t
+      :after org
+      :hook ((org-mode . evil-org-mode)
+             (org-agenda-mode . evil-org-mode)
+             (evil-org-mode . (lambda () (evil-org-set-key-theme '(navigation todo insert textobjects additional)))))
+      :config
+      (require 'evil-org-agenda)
+      (evil-org-agenda-set-keys))
+
+    (ss/leader-key-def
+     "o"   '(:ignore t :which-key "org mode")
+     "ol"  '(:ignore t :which-key "links")
+     "oli" '(org-insert-link :which-key "insert link")
+     "ols" '(org-store-link :which-key "store link")
+     "on"  '(org-toggle-narrow-to-subtree :which-key "toggle narrow")
+     "os"  '(ss/search-org-files :which-key "search notes")
+     "oI"  '(org-toggle-inline-images :which-key "toggle inline images")
+     "oS"  '(ss/org-screenshot-notes-img :which-key "screenshot")
+     "oa"  '(org-agenda :which-key "status")
+     "ot"  '(org-todo-list :which-key "todos")
+     "oc"  '(org-capture t :which-key "capture")
+     "oxx"  '(org-export-dispatch t :which-key "export")
+     "oxf"  '(ss/org-export-dispatch-with-folder :which-key "export choosing folder"))
+
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  (global-set-key (kbd "C-c C-l") 'org-insert-link)
+#+end_src
+
+** Bullets
+Setting up nice bullets
+
+#+begin_src emacs-lisp
+  (use-package org-bullets
+    :ensure t
+    :hook (org-mode . org-bullets-mode)
+    :custom
+    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+#+end_src
+
+** Tangle
+
+#+begin_src emacs-lisp
+  ;; (org-babel-do-load-languages
+  ;;    'org-babel-load-languages
+  ;;    '((haskell . t) (emacs-lisp . t) (shell . t) (python . t)
+  ;;      (C . t) (lua . t) (dot . t) (java . t)
+  ;;      (lisp . t) (clojure . t) (scheme . t)
+  ;;      (forth . t) (rust . t)))
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python . t)
+     (C . t)
+     (shell . t)))
+
+
+  (setq org-confirm-babel-evaluate nil)
+  (push '("conf-unix" . conf-unix) org-src-lang-modes)
+#+end_src
+
+Type <snippet + TAB
+
+#+begin_src emacs-lisp
+  (use-package org-tempo
+  :ensure nil
+  :after org
+  :config
+  (let ((templates '(("sh"  . "src sh")
+                     ("el"  . "src emacs-lisp")
+                     ("vim" . "src vim")
+                     ("cpp" . "src C++ :includes <iostream>  :namespaces std"))))
+    (dolist (template templates)
+      (push template org-structure-template-alist))))
+#+end_src
+
+** Org Export
+
+#+begin_src emacs-lisp
+  (defun ss/org-export-dispatch-with-folder ()
+    (interactive)
+    (let ((out-dir (read-directory-name "Export to directory: ")))
+      (unless (file-exists-p out-dir)
+        (make-directory out-dir))
+      (let ((default-directory out-dir))
+        (org-export-dispatch))))
+#+end_src
+
+** Screenshots
+*** For PKM
+
+#+begin_src emacs-lisp
+    (defun ss/org-screenshot-notes-img ()
+      "Take a screenshot into a time stamped unique-named file in the
+    img directory under the org-buffer directory and insert a link to this file."
+      (interactive)
+      (setq img-dir (concat (getenv "HOME") "/notes/img"))
+      (unless (file-exists-p img-dir)
+        (make-directory img-dir))
+      (setq filename
+            (concat img-dir "/" (format-time-string "%Y%m%d_%H%M%S") ".png"))
+      (call-process "import" nil nil nil filename)
+      (insert (concat "[[" filename "]]")))
+#+end_src
+
+*** Relative version
+Working version, places the screenshot in a =img= directory relative to the buffer path
+
+#+begin_src emacs-lisp
+  (defun ss/org-screenshot-img ()
+    "Take a screenshot into a time stamped unique-named file in the
+  img directory under the org-buffer directory and insert a link to this file."
+    (interactive)
+    (setq img-dir "img")
+    (unless (file-exists-p img-dir)
+      (make-directory img-dir))
+    (setq filename
+          (concat
+           (make-temp-name
+            (concat (file-name-directory (buffer-file-name))
+                    "img/"
+                    (format-time-string "%Y%m%d_%H%M%S") )) ".png"))
+    (call-process "import" nil nil nil filename)
+    (insert (concat "[[" filename "]]"))
+    (org-display-inline-images))
+#+end_src
+
+** File paths
+
+#+begin_src emacs-lisp
+  (setq org-directory
+        (if ss/is-termux
+            "~/storage/shared/Notes"
+          "~/notes"))
+
+  (defun ss/org-path (path)
+    (expand-file-name path org-directory))
+
+  (setq org-default-notes-file (ss/org-path "inbox.org"))
+#+end_src
+
+** Org Roam
+*** Settings
+
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :disabled
+  ;;  :ensure t
+    :custom
+    (org-roam-directory "~/notes")
+    (org-roam-completion-everywhere t)
+    (org-roam-completion-system 'default)
+    (org-roam-db-autosync-mode)
+    (org-roam-capture-templates
+     '(("m" "main" plain
+        "%?"
+        :if-new (file+head "main/${slug}.org"
+                           "#+title: ${title}\n")
+        :immediate-finish t
+        :unnarrowed t)
+       ("u" "uni" plain
+        "%?"
+        :if-new (file+head "uni/${slug}.org"
+                           "#+title: ${title}\n#+filetags: uni\n\n* Info\n** Material\n** Horari\n* Tasks\n* Teoria")
+        :immediate-finish t
+        :unnarrowed t)
+       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+        :if-new (file+head "projects/${slug}.org" "#+title: ${title}\n#+filetags: project")
+        :unnarrowed t)
+       )))
+
+  (ss/leader-key-def
+    ;; "or" '(ignore t :which-key "roam")
+    "rb" '(org-roam-buffer-toggle :which-key "buffer toggle")
+    "rc" '(org-roam-capture :which-key "roam capture")
+    "rf"  '(org-roam-node-find :which-key "node find")
+    "ri" '(org-roam-node-insert :which-key "node insert")
+    "rI" '(org-roam-node-insert-immediate :which-key "node insert immediate")
+    "ru"  '(org-roam-db-sync :which-key "sync roam db"))
+
+#+end_src
+
+*** Org Roam UI
+Graph view:
+
+#+begin_src emacs-lisp
+(use-package org-roam-ui
+    :after org-roam
+;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+;;         a hookable mode anymore, you're advised to pick something yourself
+;;         if you don't care about startup time, use
+;;  :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+#+end_src
+
+*** Fast insertion
+
+#+begin_src emacs-lisp
+;; Bind this to C-c n I
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (interactive "P")
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                  '(:immediate-finish t)))))
+    (apply #'org-roam-node-insert args)))
+#+end_src
+
+** Agenda
+
+#+begin_src emacs-lisp
+  (custom-set-variables
+   '(org-agenda-files (list "~/notes/projects" "~/notes/uni" "~/notes/inbox.org")))
+#+end_src
+
+** Org noter
+#+begin_src emacs-lisp
+  ;; (use-package org-noter
+  ;;   :ensure t
+  ;;   :after (pdf-tools)
+  ;;   :init
+  ;;   (setq org-noter-notes-search-path '("~/notes/noter/")))
+#+end_src
+
+* Elfeed
+
+#+begin_src emacs-lisp
+  (use-package elfeed
+    :ensure t
+    :init
+    (setq elfeed-feeds (quote
+                        (("https://raco.fib.upc.edu/extern/rss_avisos.jsp?KEY=59df23b9-0a35-4446-a793-173ee9daced7" uni racó)
+                         ("https://www.reddit.com/r/linux.rss" reddit linux)
+                         ("https://www.reddit.com/r/emacs.rss" reddit linux)))))
+
+  (use-package elfeed-goodies
+    :ensure t)
+
+  (elfeed-goodies/setup)
+  (setq elfeed-goodies/entry-pane-size 0.5)
+  (evil-define-key 'normal elfeed-show-mode-map
+    (kbd "J")'elfeed-goodies/split-show-next
+    (kbd "K")'elfeed-goodies/split-show-prev)
+  (evil-define-key 'normal elfeed-search-mode-map
+    (kbd "J")'elfeed-goodies/split-show-next
+    (kbd "K")'elfeed-goodies/split-show-prev)
+#+end_src
+
+* ChatGPT
+
+#+begin_src emacs-lisp
+  (use-package chatgpt
+    :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
+    :init
+    (require 'python)
+    (setq chatgpt-repo-path "~/.cache/emacs/straight/repos/ChatGPT.el/")
+    :bind ("C-c q" . chatgpt-query))
+
+  (setq python-interpreter "python3")
+
+  (setq chatgpt-query-format-string-map '(
+                                        ;; ChatGPT.el defaults
+                                        ("doc" . "Please write the documentation for the following function.\n\n%s")
+                                        ("bug" . "There is a bug in the following function, please help me fix it.\n\n%s")
+                                        ("understand" . "What does the following function do?\n\n%s")
+                                        ("improve" . "Please improve the following code.\n\n%s")
+                                        ("test" . "Explicame esto con mas detalle.\n\n%s")
+                                        ;; your new prompt
+                                        ("my-custom-type" . "My custom prompt.\n\n%s")))
+#+end_src
+
+* vterm
+
+#+begin_src emacs-lisp
+  (use-package vterm
+    :ensure t)
+
+  (use-package vterm-toggle
+    :ensure t)
+
+  (ss/leader-key-def
+    "k" '(vterm-toggle :which-key "toggle vterm"))
+  ;; "vc" '(vterm-toggle-cd :which-key "toggle and cd vterm"))
+#+end_src
