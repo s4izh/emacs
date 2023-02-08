@@ -32,6 +32,8 @@
     (package-refresh-contents)
     (package-install 'use-package))
 
+  ;; (require 'use-package)
+  ;;(setq use-package-always-ensure t)
 #+end_src
 
 ** straight.el
@@ -106,11 +108,10 @@ async when available
 #+end_src
 
 ** Auto-revert
-
+- Revert buffers when the underlying file has changed
+- Revert Dired and other buffers
 #+begin_src emacs-lisp
-  ;; Revert buffers when the underlying file has changed
   (global-auto-revert-mode 1)
-  ;; Revert Dired and other buffers
   (setq global-auto-revert-non-file-buffers t)
 #+end_src
 
@@ -222,7 +223,8 @@ I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u
       :prefix "C-c"))
 
   (ss/leader-key-def
-    "ff" '(counsel-find-file :which-key "find file")
+    "ff" '(project-find-file :which-key "find file")
+    "fg" '(counsel-rg :which-key "live grep")
     "t"  '(:ignore t :which-key "ui toggles")
     "jc"  '(:ignore t :which-key "config files")
     "tt" '(counsel-load-theme :which-key "choose theme")
@@ -236,8 +238,8 @@ I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u
     "js" '(lambda () (interactive) (counsel-find-file "~/.local/scripts"))
     "ju" '(lambda () (interactive) (find-file (expand-file-name "~/uni/3q1")))
     "ji" '(lambda () (interactive) (find-file (expand-file-name "~/notes/inbox.org")))
-    "jcd" '(lambda () (interactive) (find-file (expand-file-name "~/.local/src/dwm/config.h")) :which-key "emacs config")
-    "jce" '(lambda () (interactive) (find-file (expand-file-name "~/.config/emacs/config.org"))) :which-key "emacs config")
+    "jcd" '(lambda () (interactive) (find-file (expand-file-name "~/.local/src/dwm/config.h")) :which-key "dwm config")
+    "jce" '(lambda () (interactive) (find-file (expand-file-name "~/.config/emacs/config.org")) :which-key "emacs config"))
 
   (global-set-key (kbd "<f5>") #'recompile)
 
@@ -334,12 +336,12 @@ I keep this if I want to use a doom theme
 *** Spaceway
 
 #+begin_src emacs-lisp
-  ;; (use-package spaceway-theme
-  ;;   :ensure nil
-  ;;   :load-path "~/.config/emacs/spaceway/"
-  ;;   :config
-  ;;   (global-hl-line-mode t)
-  ;;   (set-cursor-color "#dc322f"))
+  (use-package spaceway-theme
+    :ensure nil
+    :load-path "~/.config/emacs/spaceway/"
+    :config
+    (global-hl-line-mode t)
+    (set-cursor-color "#dc322f"))
   ;; (load-theme 'spaceway t)
   #+end_src
 
@@ -353,13 +355,9 @@ I keep this if I want to use a doom theme
 ** Font
 
 #+begin_src emacs-lisp
-  ;; (add-to-list 'default-frame-alist
-  ;;              '(font . "JetBrains Mono-13"))
-
   (if (equal ss/computer "zen")
       (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
-    (add-to-list 'default-frame-alist '(font . "JetBrains Mono-13")))
-
+    (add-to-list 'default-frame-alist '(font . "JetBrains Mono-12")))
 #+end_src
 
 ** Looks
@@ -812,6 +810,7 @@ Do it as user, with sudo.
     :ensure t
     ;; :hook (org-mode . efs/org-mode-setup)
     :config
+    (setq org-src-window-setup 'current-window)
     (setq org-ellipsis " ▾")
     (setq org-hide-emphasis-markers t)
     (setq org-agenda-start-with-log-mode t)
@@ -826,14 +825,14 @@ Do it as user, with sudo.
             ("i" "Idea" entry  (file+headline "~/notes/inbox.org" "Ideas") "** %?\nContext: %a\n")
 
             ("u" "Uni entries")
-            ("uc" "CPD" entry  (file+headline "~/notes/uni/cpd.org" "Tasks") "** %?\nContext: %a\n")
-            ("us" "SOA" entry  (file+headline "~/notes/uni/soa.org" "Tasks") "** %?\nContext: %a\n")
-            ("ux" "SDX" entry  (file+headline "~/notes/uni/sdx.org" "Tasks") "** %?\nContext: %a\n")
-            ("ut" "TXC" entry  (file+headline "~/notes/uni/txc.org" "Tasks") "** %?\nContext: %a\n")
-            ("up" "PTI" entry  (file+headline "~/notes/uni/pti.org" "Tasks") "** %?\nContext: %a\n")
+            ("uc" "CPD" entry  (file+headline "~/notes/uni/cpd.org" "Tasks") "** %?\n%a\n")
+            ("us" "SOA" entry  (file+headline "~/notes/uni/soa.org" "Tasks") "** %?\n%a\n")
+            ("ux" "SDX" entry  (file+headline "~/notes/uni/sdx.org" "Tasks") "** %?\n%a\n")
+            ("ut" "TXC" entry  (file+headline "~/notes/uni/txc.org" "Tasks") "** %?\n%a\n")
+            ("up" "PTI" entry  (file+headline "~/notes/uni/pti.org" "Tasks") "** %?\n%a\n")
 
             ("p" "Project entries")
-            ("pz" "ZeOS" entry  (file+headline "~/notes/uni/soa.org" "ZeOS") "** %?\nContext: %a\n")
+            ("pz" "ZeOS" entry  (file+headline "~/notes/uni/soa.org" "ZeOS") "** %?\n%a\n")
 
             ("j" "Journal" entry (file+datetree "~/notes/journal.org")
              "* %?\nEntered on %U\n  %i\n  %a"))))
@@ -894,6 +893,19 @@ Setting up nice bullets
     :hook (org-mode . org-bullets-mode)
     :custom
     (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+#+end_src
+
+#+begin_src emacs-lisp
+  ;; (use-package org-modern
+  ;;   :ensure t
+  ;;   :hook ((org-mode                 . org-modern-mode)
+  ;;          (org-agenda-finalize-hook . org-modern-agenda))
+  ;;   :custom ((org-modern-todo t)
+  ;;            (org-modern-table nil)
+  ;;            (org-modern-variable-pitch nil)
+  ;;            (org-modern-block-fringe nil))
+  ;;   :commands (org-modern-mode org-modern-agenda)
+  ;;   :init (global-org-modern-mode))
 #+end_src
 
 ** Tangle
@@ -1003,8 +1015,7 @@ Working version, places the screenshot in a =img= directory relative to the buff
 
 #+begin_src emacs-lisp
   (use-package org-roam
-    :disabled
-  ;;  :ensure t
+    :ensure t
     :custom
     (org-roam-directory "~/notes")
     (org-roam-completion-everywhere t)
@@ -1026,7 +1037,16 @@ Working version, places the screenshot in a =img= directory relative to the buff
        ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
         :if-new (file+head "projects/${slug}.org" "#+title: ${title}\n#+filetags: project")
         :unnarrowed t)
+       ("n" "note" plain
+        "** %?\n%a"
+        :target (headline "* Captures")
+        :immediate-finish t
+        :unnarrowed t)
        )))
+
+  (setq org-roam-node-display-template
+        (concat "${title:*} "
+                (propertize "${tags:10}" 'face 'org-tag)))
 
   (ss/leader-key-def
     ;; "or" '(ignore t :which-key "roam")
@@ -1043,23 +1063,23 @@ Working version, places the screenshot in a =img= directory relative to the buff
 Graph view:
 
 #+begin_src emacs-lisp
-(use-package org-roam-ui
-    :after org-roam
-;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-;;         a hookable mode anymore, you're advised to pick something yourself
-;;         if you don't care about startup time, use
-;;  :hook (after-init . org-roam-ui-mode)
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
+  (use-package org-roam-ui
+      :after org-roam
+      :ensure t
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (after-init . org-roam-ui-mode)
+      :config
+      (setq org-roam-ui-sync-theme t
+            org-roam-ui-follow t
+            org-roam-ui-update-on-save t
+            org-roam-ui-open-on-start t))
 #+end_src
 
 *** Fast insertion
 
 #+begin_src emacs-lisp
-;; Bind this to C-c n I
 (defun org-roam-node-insert-immediate (arg &rest args)
   (interactive "P")
   (let ((args (cons arg args))
@@ -1143,4 +1163,39 @@ Graph view:
   (ss/leader-key-def
     "k" '(vterm-toggle :which-key "toggle vterm"))
   ;; "vc" '(vterm-toggle-cd :which-key "toggle and cd vterm"))
+#+end_src
+
+* Testing
+** PDF tools
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :defer t
+  :commands (pdf-view-mode pdf-tools-install)
+  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :config
+  (pdf-tools-install)
+  (define-pdf-cache-function pagelabels)
+  (setq-default pdf-view-display-size 'fit-page)
+  (add-to-list 'org-file-apps
+               '("\\.pdf\\'" . (lambda (file link)
+                                 (org-pdftools-open link)))))
+#+end_src
+
+** DIRED compress
+dired-compress-files-alist
+
+** Org capture to a file
+#+begin_src emacs-lisp
+  (defun org-capture-template-choose-file ()
+    "Capture template that prompts to choose a file."
+    (let* ((files (org-agenda-files))
+           (file-list (mapcar 'abbreviate-file-name files))
+           (file (completing-read "Capture to file: " file-list nil t)))
+      (find-file (expand-file-name file files))
+      (org-capture-put :template "\n* TODO %?")))
+
+  (add-to-list 'org-capture-templates
+               '("f" "Choose file" entry
+                 (function org-capture-template-choose-file)))
 #+end_src
