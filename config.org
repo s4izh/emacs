@@ -437,8 +437,7 @@ I keep this if I want to use a doom theme
 Show hexa colors
 #+begin_src emacs-lisp
 (use-package rainbow-mode
-  :ensure t
-  :init (add-hook 'prog-mode-hook 'rainbow-mode))
+  :ensure t)
 #+end_src
 
 ** Diminish
