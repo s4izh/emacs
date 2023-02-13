@@ -293,7 +293,7 @@ Function to change the size of the windows
 #+begin_src emacs-lisp
   (use-package ewal-doom-themes
     :ensure t)
-  (load-theme 'ewal-doom-one t)
+  ;; (load-theme 'ewal-doom-one t)
 #+end_src
 
 *** modus
@@ -342,7 +342,7 @@ I keep this if I want to use a doom theme
     :config
     (global-hl-line-mode t)
     (set-cursor-color "#dc322f"))
-  ;; (load-theme 'spaceway t)
+  (load-theme 'spaceway t)
   #+end_src
 
 *** Doom Modeline
