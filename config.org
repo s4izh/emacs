@@ -338,7 +338,7 @@ I keep this if I want to use a doom theme
 #+begin_src emacs-lisp
   (use-package spaceway-theme
     :ensure nil
-    :load-path "~/.config/emacs/spaceway/"
+    :load-path "~/.config/emacs/lisp/spaceway/"
     :config
     (global-hl-line-mode t)
     (set-cursor-color "#dc322f"))
