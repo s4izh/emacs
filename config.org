@@ -231,8 +231,8 @@ I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u
     "bi"  '(ibuffer :which-key "go to ibuffer")
     "bb"  '(counsel-switch-buffer :which-key "counsel-switch-buffer")
     "bk"  '(kill-buffer :which-key "kill-buffer")
-    "h"  '(previous-buffer :which-key "previous-buffer")
-    "l"  '(next-buffer :which-key "next-buffer")
+    "p"  '(previous-buffer :which-key "previous-buffer")
+    "n"  '(next-buffer :which-key "next-buffer")
     "c"  '(compile :which-key "compile")
     "d" '(lambda () (interactive) (find-file (expand-file-name ".")))
     "js" '(lambda () (interactive) (counsel-find-file "~/.local/scripts"))
@@ -429,6 +429,7 @@ I keep this if I want to use a doom theme
                   term-mode-hook
                   vterm-mode-hook
                   shell-mode-hook
+                  org-agenda-mode-hook
                   eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 #+end_src
@@ -555,6 +556,22 @@ Show hexa colors
     ([remap describe-key] . helpful-key))
 #+end_src
 
+** Company mode
+#+begin_src emacs-lisp
+    (use-package company
+      :ensure t
+      :hook ((emacs-lisp-mode . company-mode)
+             (rust-mode . company-mode))
+      :config
+      (setq company-idle-delay 0.1
+            company-minimum-prefix-length 1)
+      :bind
+      (:map company-active-map
+            ("C-n". company-select-next)
+            ("C-p". company-select-previous)
+            ("C-y". company-complete-selection)))
+#+end_src
+
 * File Management
 ** Dired
 
@@ -667,6 +684,67 @@ View issues, respond github messages bla bla from emacs
   ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
   ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
   ;; (use-package forge)
+#+end_src
+
+** Lsp-Mode
+#+begin_src emacs-lisp
+    (use-package lsp-mode
+      :ensure t
+      :config
+      (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+      (lsp-enable-which-key-integration t)
+      :custom (lsp-headerline-breadcrumb-enable nil))
+
+    (ss/leader-key-def
+    "l"  '(:ignore t :which-key "lsp")
+    "ld" 'xref-find-definitions
+    "lr" 'xref-find-references
+    "ln" 'lsp-ui-find-next-reference
+    "lp" 'lsp-ui-find-prev-reference
+    "ls" 'counsel-imenu
+    "le" 'lsp-ui-flycheck-list
+    "lS" 'lsp-ui-sideline-mode
+    "la" 'lsp-ui-sideline-mode
+    "lX" 'lsp-execute-code-action)
+
+  ;; (use-package lsp-ui
+  ;;   :straight t
+  ;;   :hook (lsp-mode . lsp-ui-mode)
+  ;;   :config
+  ;;   (setq lsp-ui-sideline-enable t)
+  ;;   (setq lsp-ui-sideline-show-hover nil)
+  ;;   (setq lsp-ui-doc-position 'bottom)
+  ;;   (lsp-ui-doc-show))
+#+end_src
+
+** Flycheck
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :ensure t)
+  ;; :init
+  ;; (global-flycheck-mode))
+#+end_src
+
+** Rust
+
+#+begin_src emacs-lisp
+  (use-package rust-mode
+    :ensure t
+    :hook ((rust-mode . flycheck-mode)
+           (rust-mode . lsp-deferred))
+    :init (setq rust-format-on-save t))
+ #+end_src
+
+** Debugger
+#+begin_src emacs-lisp
+  (use-package dap-mode
+    :straight t
+    :custom
+    (lsp-enable-dap-auto-configure nil)
+    :config
+    (dap-ui-mode 1)
+    (dap-tooltip-mode 1))
 #+end_src
 
 * System Administration
@@ -874,6 +952,8 @@ Do it as user, with sudo.
      "oI"  '(org-toggle-inline-images :which-key "toggle inline images")
      "oS"  '(ss/org-screenshot-notes-img :which-key "screenshot")
      "oa"  '(org-agenda :which-key "status")
+     "od"  '(org-agenda-day-view :which-key "agenda day view")
+     "ou"  '(org-todo-list "uni" :which-key "uni tasks")
      "ot"  '(org-todo-list :which-key "todos")
      "oc"  '(org-capture t :which-key "capture")
      "oxx"  '(org-export-dispatch t :which-key "export")
@@ -947,13 +1027,17 @@ Type <snippet + TAB
 ** Org Export
 
 #+begin_src emacs-lisp
-  (defun ss/org-export-dispatch-with-folder ()
-    (interactive)
-    (let ((out-dir (read-directory-name "Export to directory: ")))
-      (unless (file-exists-p out-dir)
-        (make-directory out-dir))
-      (let ((default-directory out-dir))
-        (org-export-dispatch))))
+    (defun ss/org-export-dispatch-with-folder ()
+      (interactive)
+      (let ((out-dir (read-directory-name "Export to directory: ")))
+        (unless (file-exists-p out-dir)
+          (make-directory out-dir))
+        (let ((default-directory out-dir))
+          (org-export-dispatch))))
+
+  (add-to-list 'org-export-backends org)
+  ;; md export
+  (require 'ox-md)
 #+end_src
 
 ** Screenshots
@@ -1092,6 +1176,7 @@ Graph view:
 #+begin_src emacs-lisp
   (custom-set-variables
    '(org-agenda-files (list "~/notes/projects" "~/notes/uni" "~/notes/inbox.org")))
+  (setq calendar-week-start-day 1)
 #+end_src
 
 ** Org noter
