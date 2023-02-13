@@ -1035,7 +1035,7 @@ Type <snippet + TAB
         (let ((default-directory out-dir))
           (org-export-dispatch))))
 
-  (add-to-list 'org-export-backends org)
+  (add-to-list 'org-export-backends 'org)
   ;; md export
   (require 'ox-md)
 #+end_src
