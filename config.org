@@ -853,7 +853,7 @@ Do it as user, with sudo.
             (mount-vm-filesystem "sistemes" "/home/alumne/zeos" "/home/sergio/uni/3q2/soa/zeos"))
         (print "machine was already on"))
       (let ((uni-path (getenv "UNI_PATH")))
-        (find-file (concat uni-path "/3q2/soa/zeos"))))
+        (find-file "/ssh:alumne@sistemes:/home/alumne/zeos")))
 
       ;; (ss/zeos-start)
 
@@ -872,6 +872,14 @@ Do it as user, with sudo.
 
 
 
+#+end_src
+
+** Remote bindings
+
+#+begin_src emacs-lisp
+  (ss/leader-key-def
+    "v"  '(:ignore t :which-key "toggles")
+    "vz" '(ss/zeos-on :which-key "zeos editor"))
 #+end_src
 
 * Org Mode
