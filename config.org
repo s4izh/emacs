@@ -632,31 +632,31 @@ Show hexa colors
 ** Open Files Externally
 
 #+begin_src emacs-lisp
-  ;; (use-package openwith
-  ;;   :ensure t
-  ;;   :if (not ss/is-termux)
-  ;;   :config
-  ;;   (setq openwith-associations
-  ;;         (list
-  ;;          (list (openwith-make-extension-regexp
-  ;;                 '("mpg" "mpeg" "mp3" "mp4"
-  ;;                   "avi" "wmv" "wav" "mov" "flv"
-  ;;                   "ogm" "ogg" "mkv"))
-  ;;                "mpv"
-  ;;                '(file))
-  ;;          ;; (list (openwith-make-extension-regexp
-  ;;          ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
-  ;;          ;;          "png" "gif" "bmp" "tif" "jpeg"))
-  ;;          ;;       ;; Removed jpg because Telega
-  ;;          ;;       ;; caused feh to be opened...
-  ;;          ;;       ;; "feh"
-  ;;          ;;          "sxiv"
-  ;;          ;;       '(file))
-  ;;          (list (openwith-make-extension-regexp
-  ;;                 '("pdf"))
-  ;;                "firefox"
-  ;;                '(file))))
-  ;;   (openwith-mode t))
+  (use-package openwith
+    :ensure t
+    :if (not ss/is-termux)
+    :config
+    (setq openwith-associations
+          (list
+           (list (openwith-make-extension-regexp
+                  '("mpg" "mpeg" "mp3" "mp4"
+                    "avi" "wmv" "wav" "mov" "flv"
+                    "ogm" "ogg" "mkv"))
+                 "mpv"
+                 '(file))
+           ;; (list (openwith-make-extension-regexp
+           ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
+           ;;          "png" "gif" "bmp" "tif" "jpeg"))
+           ;;       ;; Removed jpg because Telega
+           ;;       ;; caused feh to be opened...
+           ;;       ;; "feh"
+           ;;          "sxiv"
+           ;;       '(file))
+           (list (openwith-make-extension-regexp
+                  '("pdf"))
+                 "firefox"
+                 '(file))))
+    (openwith-mode t))
 #+end_src
 
 * Development
@@ -1056,7 +1056,7 @@ Type <snippet + TAB
       "Take a screenshot into a time stamped unique-named file in the
     img directory under the org-buffer directory and insert a link to this file."
       (interactive)
-      (setq img-dir (concat (getenv "HOME") "/notes/img"))
+      (setq img-dir (concat (getenv "HOME") "/notes/attachments/img"))
       (unless (file-exists-p img-dir)
         (make-directory img-dir))
       (setq filename
@@ -1189,11 +1189,11 @@ Graph view:
 
 ** Org noter
 #+begin_src emacs-lisp
-  ;; (use-package org-noter
-  ;;   :ensure t
-  ;;   :after (pdf-tools)
-  ;;   :init
-  ;;   (setq org-noter-notes-search-path '("~/notes/noter/")))
+  (use-package org-noter
+    :ensure t
+    :after (pdf-tools)
+    :init
+    (setq org-noter-notes-search-path '("~/notes/noter/")))
 #+end_src
 
 ** Excalidraw
@@ -1269,19 +1269,19 @@ Graph view:
 * Testing
 ** PDF tools
 #+begin_src emacs-lisp
-  (use-package pdf-tools
-    :ensure t
-    :defer t
-    :commands (pdf-view-mode pdf-tools-install)
-    :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
-    :magic ("%PDF" . pdf-view-mode)
-    :config
-    (pdf-tools-install)
-    (define-pdf-cache-function pagelabels)
-    (setq-default pdf-view-display-size 'fit-page)
-    (add-to-list 'org-file-apps
-                 '("\\.pdf\\'" . (lambda (file link)
-                                   (org-pdftools-open link)))))
+  ;; (use-package pdf-tools
+  ;;   :ensure t
+  ;;   :defer t
+  ;;   :commands (pdf-view-mode pdf-tools-install)
+  ;;   :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
+  ;;   :magic ("%PDF" . pdf-view-mode)
+  ;;   :config
+  ;;   (pdf-tools-install)
+  ;;   (define-pdf-cache-function pagelabels)
+  ;;   (setq-default pdf-view-display-size 'fit-page)
+  ;;   (add-to-list 'org-file-apps
+  ;;                '("\\.pdf\\'" . (lambda (file link)
+  ;;                                  (org-pdftools-open link)))))
 #+end_src
 
 ** DIRED compress
