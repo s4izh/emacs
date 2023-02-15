@@ -632,31 +632,31 @@ Show hexa colors
 ** Open Files Externally
 
 #+begin_src emacs-lisp
-  (use-package openwith
-    :ensure t
-    :if (not ss/is-termux)
-    :config
-    (setq openwith-associations
-          (list
-           (list (openwith-make-extension-regexp
-                  '("mpg" "mpeg" "mp3" "mp4"
-                    "avi" "wmv" "wav" "mov" "flv"
-                    "ogm" "ogg" "mkv"))
-                 "mpv"
-                 '(file))
-           ;; (list (openwith-make-extension-regexp
-           ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
-           ;;          "png" "gif" "bmp" "tif" "jpeg"))
-           ;;       ;; Removed jpg because Telega
-           ;;       ;; caused feh to be opened...
-           ;;       ;; "feh"
-           ;;          "sxiv"
-           ;;       '(file))
-           (list (openwith-make-extension-regexp
-                  '("pdf"))
-                 "firefox"
-                 '(file))))
-    (openwith-mode t))
+  ;; (use-package openwith
+  ;;   :ensure t
+  ;;   :if (not ss/is-termux)
+  ;;   :config
+  ;;   (setq openwith-associations
+  ;;         (list
+  ;;          (list (openwith-make-extension-regexp
+  ;;                 '("mpg" "mpeg" "mp3" "mp4"
+  ;;                   "avi" "wmv" "wav" "mov" "flv"
+  ;;                   "ogm" "ogg" "mkv"))
+  ;;                "mpv"
+  ;;                '(file))
+  ;;          ;; (list (openwith-make-extension-regexp
+  ;;          ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
+  ;;          ;;          "png" "gif" "bmp" "tif" "jpeg"))
+  ;;          ;;       ;; Removed jpg because Telega
+  ;;          ;;       ;; caused feh to be opened...
+  ;;          ;;       ;; "feh"
+  ;;          ;;          "sxiv"
+  ;;          ;;       '(file))
+  ;;          (list (openwith-make-extension-regexp
+  ;;                 '("pdf"))
+  ;;                "firefox"
+  ;;                '(file))))
+  ;;   (openwith-mode t))
 #+end_src
 
 * Development
@@ -1196,6 +1196,15 @@ Graph view:
   ;;   (setq org-noter-notes-search-path '("~/notes/noter/")))
 #+end_src
 
+** Excalidraw
+#+begin_src emacs-lisp
+  ;; (use-package org-excalidraw
+  ;;   :straight (:type git :host github :repo "wdavew/org-excalidraw")
+  ;;   :config
+  ;;   (org-excalidraw-directory "/home/sergio/notes/img/excalidraw")
+  ;; )
+#+end_src
+
 * Elfeed
 
 #+begin_src emacs-lisp
@@ -1260,18 +1269,19 @@ Graph view:
 * Testing
 ** PDF tools
 #+begin_src emacs-lisp
-(use-package pdf-tools
-  :defer t
-  :commands (pdf-view-mode pdf-tools-install)
-  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
-  :magic ("%PDF" . pdf-view-mode)
-  :config
-  (pdf-tools-install)
-  (define-pdf-cache-function pagelabels)
-  (setq-default pdf-view-display-size 'fit-page)
-  (add-to-list 'org-file-apps
-               '("\\.pdf\\'" . (lambda (file link)
-                                 (org-pdftools-open link)))))
+  (use-package pdf-tools
+    :ensure t
+    :defer t
+    :commands (pdf-view-mode pdf-tools-install)
+    :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
+    :magic ("%PDF" . pdf-view-mode)
+    :config
+    (pdf-tools-install)
+    (define-pdf-cache-function pagelabels)
+    (setq-default pdf-view-display-size 'fit-page)
+    (add-to-list 'org-file-apps
+                 '("\\.pdf\\'" . (lambda (file link)
+                                   (org-pdftools-open link)))))
 #+end_src
 
 ** DIRED compress
