@@ -1301,3 +1301,10 @@ dired-compress-files-alist
                '("f" "Choose file" entry
                  (function org-capture-template-choose-file)))
 #+end_src
+
+** Erlang mode
+
+#+begin_src emacs-lisp
+  (use-package erlang
+    :ensure t)
+#+end_src
