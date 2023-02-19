@@ -1033,7 +1033,10 @@ Type <snippet + TAB
 #+end_src
 
 ** Org Export
-
+#+begin_src emacs-lisp
+  (setq org-export-initial-scope 'subtree)
+#+end_src
+*** Export to a folder
 #+begin_src emacs-lisp
     (defun ss/org-export-dispatch-with-folder ()
       (interactive)
@@ -1042,11 +1045,34 @@ Type <snippet + TAB
           (make-directory out-dir))
         (let ((default-directory out-dir))
           (org-export-dispatch))))
-
-  (add-to-list 'org-export-backends 'org)
-  ;; md export
-  (require 'ox-md)
 #+end_src
+
+*** md and org export
+#+begin_src emacs-lisp
+  (require 'ox-md)
+  (add-to-list 'org-export-backends 'org)
+#+end_src
+
+*** latex export
+#+begin_src emacs-lisp
+;; for code highlighting
+  (setq org-latex-listings 't)
+
+    (with-eval-after-load 'ox-latex
+      (add-to-list 'org-latex-classes
+                   '("org-plain-latex" ;; I use this in base class in all of my org exports.
+                     "\\documentclass{extarticle}
+    [NO-DEFAULT-PACKAGES]
+    [PACKAGES]
+    [EXTRA]"
+                     ("\\section{%s}" . "\\section*{%s}")
+                     ("\\subsection{%s}" . "\\subsection*{%s}")
+                     ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                     ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                     ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+      )
+#+end_src
+
 
 ** Screenshots
 *** For PKM
