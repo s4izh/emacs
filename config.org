@@ -348,8 +348,8 @@ I keep this if I want to use a doom theme
 *** Doom Modeline
 
 #+begin_src emacs-lisp
-  ;; (use-package doom-modeline
-  ;;   :init (doom-modeline-mode 1))
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1))
 #+end_src
 
 ** Font
@@ -959,9 +959,10 @@ Do it as user, with sudo.
      "os"  '(ss/search-org-files :which-key "search notes")
      "oI"  '(org-toggle-inline-images :which-key "toggle inline images")
      "oS"  '(ss/org-screenshot-notes-img :which-key "screenshot")
+     "oD"  '(ss/remove-last-pkm-screenshot :which-key "remove-last-screenshot")
      "oa"  '(org-agenda :which-key "status")
-     "od"  '(org-agenda-day-view :which-key "agenda day view")
-     "ou"  '(org-todo-list "uni" :which-key "uni tasks")
+     ;; "od"  '(org-agenda-day-view :which-key "agenda day view")
+     ;; "ou"  '(org-todo-list "uni" :which-key "uni tasks")
      "ot"  '(org-todo-list :which-key "todos")
      "oc"  '(org-capture t :which-key "capture")
      "oxx"  '(org-export-dispatch t :which-key "export")
@@ -1073,7 +1074,6 @@ Type <snippet + TAB
       )
 #+end_src
 
-
 ** Screenshots
 *** For PKM
 
@@ -1089,6 +1089,24 @@ Type <snippet + TAB
             (concat img-dir "/" (format-time-string "%Y%m%d_%H%M%S") ".png"))
       (call-process "import" nil nil nil filename)
       (insert (concat "[[" filename "]]")))
+#+end_src
+
+Remove last screenshot
+
+#+begin_src emacs-lisp
+  (defun ss/remove-newest-file (directory)
+    "Removes the newest file in the specified directory."
+    (interactive "DDirectory to remove newest file from: ")
+    (let* ((files (directory-files directory t))
+           (sorted-files (sort files #'file-newer-than-file-p))
+           (newest-file (car sorted-files)))
+      (when newest-file
+        (delete-file newest-file)
+        (message "Removed file: %s" newest-file))))
+
+  (defun ss/remove-last-pkm-screenshot ()
+    (interactive)
+    (ss/remove-newest-file "~/notes/attachments/img"))
 #+end_src
 
 *** Relative version
