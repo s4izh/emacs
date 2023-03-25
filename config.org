@@ -349,8 +349,8 @@ I keep this if I want to use a doom theme
 *** Doom Modeline
 
 #+begin_src emacs-lisp
-  (use-package doom-modeline
-    :init (doom-modeline-mode 1))
+  ;;(use-package doom-modeline
+  ;;  :init (doom-modeline-mode 1))
 #+end_src
 
 ** Font
@@ -359,7 +359,7 @@ I keep this if I want to use a doom theme
   (if (equal ss/computer "zen")
       ;; (add-to-list 'default-frame-alist '(font . "JetBrains Mono-13"))
       (add-to-list 'default-frame-alist '(font . "HackNerdFont Mono-13"))
-    (add-to-list 'default-frame-alist '(font . "JetBrains Mono-12")))
+    (add-to-list 'default-frame-alist '(font . "Liberation Mono-13")))
 #+end_src
 
 ** Looks
@@ -1168,10 +1168,10 @@ Working version, places the screenshot in a =img= directory relative to the buff
        ("u" "uni" plain
         "%?"
         :if-new (file+head "uni/${slug}.org"
-                           "#+title: ${title}\n#+filetags: uni\n\n* Info\n** Material\n** Horari\n* Tasks\n* Teoria")
+                           "#+title: ${title}\n#+filetags: uni\n\n* Info\n** Material\n** Tasks\n** Horari\n* Teoria")
         :immediate-finish t
         :unnarrowed t)
-       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+       ("p" "project" plain "*Project info\n\n** Goals\n\n%?\n\n** Tasks\n\n**\n\n** Dates\n\n"
         :if-new (file+head "projects/${slug}.org" "#+title: ${title}\n#+filetags: project")
         :unnarrowed t)
        ("n" "note" plain
@@ -1563,4 +1563,11 @@ dired-compress-files-alist
        ;; related code from this file, copilot does not need it.
        (require 'company)
        (global-copilot-mode)))
+#+end_src
+
+** Nix mode
+#+begin_src emacs-lisp
+  (use-package nix-mode
+    :ensure t
+    :mode "\\.nix\\'")
 #+end_src
