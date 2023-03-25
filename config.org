@@ -224,6 +224,7 @@ I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u
 
   (ss/leader-key-def
     "ff" '(project-find-file :which-key "find file")
+    "," '(find-file :which-key "find file")
     "fg" '(counsel-rg :which-key "live grep")
     "t"  '(:ignore t :which-key "ui toggles")
     "jc"  '(:ignore t :which-key "config files")
