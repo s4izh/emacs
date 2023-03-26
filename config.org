@@ -241,6 +241,7 @@ I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u
     "ju" '(lambda () (interactive) (find-file (expand-file-name "~/uni/3q1")))
     "ji" '(lambda () (interactive) (find-file (expand-file-name "~/notes/inbox.org")))
     "jcd" '(lambda () (interactive) (find-file (expand-file-name "~/.local/src/dwm/config.h")) :which-key "dwm config")
+    "jcn" '(lambda () (interactive) (find-file (expand-file-name "~/nixos/flake.nix")) :which-key "nix config")
     "jce" '(lambda () (interactive) (find-file (expand-file-name "~/.config/emacs/config.org")) :which-key "emacs config"))
 
   (global-set-key (kbd "<f5>") #'recompile)
@@ -359,7 +360,7 @@ I keep this if I want to use a doom theme
 #+begin_src emacs-lisp
   (if (equal ss/computer "zen")
       ;; (add-to-list 'default-frame-alist '(font . "JetBrains Mono-13"))
-      (add-to-list 'default-frame-alist '(font . "HackNerdFont Mono-13"))
+      (add-to-list 'default-frame-alist '(font . "Liberation Mono-14"))
     (add-to-list 'default-frame-alist '(font . "Liberation Mono-13")))
 #+end_src
 
@@ -707,17 +708,16 @@ View issues, respond github messages bla bla from emacs
     "ls" 'counsel-imenu
     "le" 'lsp-ui-flycheck-list
     "lS" 'lsp-ui-sideline-mode
-    "la" 'lsp-ui-sideline-mode
-    "lX" 'lsp-execute-code-action)
+    "la" 'lsp-execute-code-action)
 
-  ;; (use-package lsp-ui
-  ;;   :straight t
-  ;;   :hook (lsp-mode . lsp-ui-mode)
-  ;;   :config
-  ;;   (setq lsp-ui-sideline-enable t)
-  ;;   (setq lsp-ui-sideline-show-hover nil)
-  ;;   (setq lsp-ui-doc-position 'bottom)
-  ;;   (lsp-ui-doc-show))
+  (use-package lsp-ui
+    :straight t
+    :hook (lsp-mode . lsp-ui-mode)
+    :config
+    (setq lsp-ui-sideline-enable t)
+    (setq lsp-ui-sideline-show-hover nil)
+    (setq lsp-ui-doc-position 'bottom)
+    (lsp-ui-doc-show))
 #+end_src
 
 ** Flycheck
@@ -1276,6 +1276,17 @@ Graph view:
     (kbd "K")'elfeed-goodies/split-show-prev)
 #+end_src
 
+* Vterm toggle
+
+#+begin_src emacs-lisp
+  (use-package vterm-toggle
+    :ensure t)
+
+  (ss/leader-key-def
+    "k" '(vterm-toggle :which-key "toggle vterm"))
+  ;; "vc" '(vterm-toggle-cd :which-key "toggle and cd vterm"))
+#+end_src
+
 * ChatGPT
 
 #+begin_src emacs-lisp
@@ -1297,20 +1308,6 @@ Graph view:
                                         ("test" . "Explicame esto con mas detalle.\n\n%s")
                                         ;; your new prompt
                                         ("my-custom-type" . "My custom prompt.\n\n%s")))
-#+end_src
-
-* vterm
-
-#+begin_src emacs-lisp
-  (use-package vterm
-    :ensure t)
-
-  (use-package vterm-toggle
-    :ensure t)
-
-  (ss/leader-key-def
-    "k" '(vterm-toggle :which-key "toggle vterm"))
-  ;; "vc" '(vterm-toggle-cd :which-key "toggle and cd vterm"))
 #+end_src
 
 * Testing
@@ -1417,9 +1414,6 @@ dired-compress-files-alist
   ;;   (define-key company-mode-map (kbd "TAB") 'my-tab)
   ;;   (define-key company-active-map (kbd "<tab>") 'my-tab)
   ;;   (define-key company-active-map (kbd "TAB") 'my-tab))
-
-
-
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1567,8 +1561,32 @@ dired-compress-files-alist
 #+end_src
 
 ** Nix mode
+*** Mode
 #+begin_src emacs-lisp
   (use-package nix-mode
     :ensure t
     :mode "\\.nix\\'")
+#+end_src
+
+*** Company nix
+
+#+begin_src emacs-lisp
+  (use-package company-nixos-options
+    :ensure t)
+
+  (add-to-list 'company-backends 'company-nixos-options)
+#+end_src
+
+*** Ivy nix
+
+#+begin_src emacs-lisp
+  (use-package ivy-nixos-options
+    :load-path "~/.config/emacs/lisp/")
+#+end_src
+
+
+** Theme fix try
+
+#+begin_src emacs-lisp
+  (load-theme 'spaceway t)
 #+end_src
