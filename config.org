@@ -716,7 +716,7 @@ View issues, respond github messages bla bla from emacs
     :config
     (setq lsp-ui-sideline-enable t)
     (setq lsp-ui-sideline-show-hover nil)
-    (setq lsp-ui-doc-position 'bottom)
+    ;; (setq lsp-ui-doc-position 'bottom)
     (lsp-ui-doc-show))
 #+end_src
 
