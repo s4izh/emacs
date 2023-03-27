@@ -750,6 +750,13 @@ View issues, respond github messages bla bla from emacs
     (dap-tooltip-mode 1))
 #+end_src
 
+** Yaml
+#+begin_src emacs-lisp
+  (use-package yaml-mode
+    :ensure t
+    :mode "\\.yml\\'")
+#+end_src
+
 * System Administration
 ** Tramp
 
