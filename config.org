@@ -234,8 +234,8 @@ I use =C-u= to scroll up on evil mode so I rebind =universal-argument= to =C-M-u
     "bk"  '(kill-buffer :which-key "kill-buffer")
     "p"  '(previous-buffer :which-key "previous-buffer")
     "n"  '(next-buffer :which-key "next-buffer")
-    "c"  '(compile :which-key "compile")
-    "C"  '(recompile :which-key "recompile")
+    "C"  '(compile :which-key "compile")
+    "c"  '(recompile :which-key "recompile")
     "d" '(lambda () (interactive) (find-file (expand-file-name ".")))
     "js" '(lambda () (interactive) (counsel-find-file "~/.local/scripts"))
     "ju" '(lambda () (interactive) (find-file (expand-file-name "~/uni/3q1")))
@@ -434,6 +434,7 @@ I keep this if I want to use a doom theme
                   vterm-mode-hook
                   shell-mode-hook
                   org-agenda-mode-hook
+                  compilation-mode-hook
                   eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 #+end_src
