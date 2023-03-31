@@ -330,7 +330,7 @@ I keep this if I want to use a doom theme
   (use-package doom-themes
     :ensure t)
 
-  ;; (load-theme 'doom-solarized-dark t)
+  (load-theme 'doom-solarized-dark t)
   ;; (load-theme 'doom-tomorrow-night t)
   ;; (load-theme 'doom-spacegrey t)
   ;; (load-theme 'doom-gruvbox t)
@@ -345,7 +345,7 @@ I keep this if I want to use a doom theme
     :config
     (global-hl-line-mode t)
     (set-cursor-color "#dc322f"))
-  (load-theme 'spaceway t)
+  ;;(load-theme 'spaceway t)
   #+end_src
 
 *** Doom Modeline
@@ -1592,9 +1592,3 @@ dired-compress-files-alist
     :load-path "~/.config/emacs/lisp/")
 #+end_src
 
-
-** Theme fix try
-
-#+begin_src emacs-lisp
-  (load-theme 'spaceway t)
-#+end_src
