@@ -1234,6 +1234,22 @@ Graph view:
     (apply #'org-roam-node-insert args)))
 #+end_src
 
+*** New display type (folder)
+#+begin_src emacs-lisp
+  (cl-defmethod org-roam-node-type ((node org-roam-node))
+    "Return the TYPE of NODE."
+    (condition-case nil
+        (file-name-nondirectory
+         (directory-file-name
+          (file-name-directory
+           (file-relative-name (org-roam-node-file node) org-roam-directory))))
+      (error "")))
+
+  (setq org-roam-node-display-template
+      (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+#+end_src
+
+
 ** Agenda
 
 #+begin_src emacs-lisp
