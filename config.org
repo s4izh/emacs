@@ -1318,7 +1318,7 @@ Graph view:
     :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
     :init
     (require 'python)
-    (setq chatgpt-repo-path "~/.cache/emacs/straight/repos/ChatGPT.el/")
+    (setq chatgpt-repo-path "~/.config/emacs/straight/repos/ChatGPT.el/")
     :bind ("C-c q" . chatgpt-query))
 
   (setq python-interpreter "python3")
@@ -1595,10 +1595,10 @@ dired-compress-files-alist
 *** Company nix
 
 #+begin_src emacs-lisp
-  (use-package company-nixos-options
-    :ensure t)
+  ;(use-package company-nixos-options
+  ;  :ensure t)
 
-  (add-to-list 'company-backends 'company-nixos-options)
+  ;(add-to-list 'company-backends 'company-nixos-options)
 #+end_src
 
 *** Ivy nix
