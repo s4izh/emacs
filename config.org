@@ -356,6 +356,15 @@ I keep this if I want to use a doom theme
   ;;  :init (doom-modeline-mode 1))
 #+end_src
 
+*** zerodark
+#+begin_src emacs-lisp
+  (use-package zerodark-theme
+    :ensure t)
+
+  ;;(load-theme 'zerodark t)
+
+  (zerodark-setup-modeline-format)
+#+end_src
 ** Font
 
 #+begin_src emacs-lisp
@@ -639,31 +648,31 @@ Show hexa colors
 ** Open Files Externally
 
 #+begin_src emacs-lisp
-  (use-package openwith
-    :ensure t
-    :if (not ss/is-termux)
-    :config
-    (setq openwith-associations
-          (list
-           (list (openwith-make-extension-regexp
-                  '("mpg" "mpeg" "mp3" "mp4"
-                    "avi" "wmv" "wav" "mov" "flv"
-                    "ogm" "ogg" "mkv"))
-                 "mpv"
-                 '(file))
-           ;; (list (openwith-make-extension-regexp
-           ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
-           ;;          "png" "gif" "bmp" "tif" "jpeg"))
-           ;;       ;; Removed jpg because Telega
-           ;;       ;; caused feh to be opened...
-           ;;       ;; "feh"
-           ;;          "sxiv"
-           ;;       '(file))
-           (list (openwith-make-extension-regexp
-                  '("pdf"))
-                 "firefox"
-                 '(file))))
-    (openwith-mode t))
+  ;; (use-package openwith
+  ;;   :ensure t
+  ;;   :if (not ss/is-termux)
+  ;;   :config
+  ;;   (setq openwith-associations
+  ;;         ;;(list
+  ;;          (list (openwith-make-extension-regexp
+  ;;                 '("mpg" "mpeg" "mp3" "mp4"
+  ;;                   "avi" "wmv" "wav" "mov" "flv"
+  ;;                   "ogm" "ogg" "mkv"))
+  ;;                "mpv"
+  ;;                '(file))
+  ;;          ;; (list (openwith-make-extension-regexp
+  ;;          ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
+  ;;          ;;          "png" "gif" "bmp" "tif" "jpeg"))
+  ;;          ;;       ;; Removed jpg because Telega
+  ;;          ;;       ;; caused feh to be opened...
+  ;;          ;;       ;; "feh"
+  ;;          ;;          "sxiv"
+  ;;          ;;       '(file))
+  ;;          ;; (list (openwith-make-extension-regexp
+  ;;          ;;        '("pdf"))
+  ;;          ;;       "firefox"
+  ;;          ;;       '(file))))
+  ;;   (openwith-mode t))
 #+end_src
 
 * Development
@@ -786,8 +795,8 @@ View issues, respond github messages bla bla from emacs
 *** Ivy nix
 
 #+begin_src emacs-lisp
-  (use-package ivy-nixos-options
-    :load-path "~/.config/emacs/lisp/")
+  ;(use-package ivy-nixos-options
+  ;  :load-path "~/.config/emacs/lisp/")
 #+end_src
 * System Administration
 ** Tramp
@@ -1007,6 +1016,7 @@ Do it as user, with sudo.
      ;; "ou"  '(org-todo-list "uni" :which-key "uni tasks")
      "ot"  '(org-todo-list :which-key "todos")
      "oc"  '(org-capture t :which-key "capture")
+     "op"  '(org-latex-export-to-pdf t :which-key "export to pdf")
      "oxx"  '(org-export-dispatch t :which-key "export")
      "oxf"  '(ss/org-export-dispatch-with-folder :which-key "export choosing folder"))
 
@@ -1018,24 +1028,24 @@ Do it as user, with sudo.
 Setting up nice bullets
 
 #+begin_src emacs-lisp
-  (use-package org-bullets
-    :ensure t
-    :hook (org-mode . org-bullets-mode))
+  ;; (use-package org-bullets
+  ;;   :ensure t
+  ;;   :hook (org-mode . org-bullets-mode))
     ;:custom
     ;(org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 #+end_src
 
 #+begin_src emacs-lisp
-  ;; (use-package org-modern
-  ;;   :ensure t
-  ;;   :hook ((org-mode                 . org-modern-mode)
-  ;;          (org-agenda-finalize-hook . org-modern-agenda))
-  ;;   :custom ((org-modern-todo t)
-  ;;            (org-modern-table nil)
-  ;;            (org-modern-variable-pitch nil)
-  ;;            (org-modern-block-fringe nil))
-  ;;   :commands (org-modern-mode org-modern-agenda)
-  ;;   :init (global-org-modern-mode))
+  (use-package org-modern
+    :ensure t
+    :hook ((org-mode                 . org-modern-mode)
+           (org-agenda-finalize-hook . org-modern-agenda))
+    :custom ((org-modern-todo t)
+             (org-modern-table nil)
+             (org-modern-variable-pitch nil)
+             (org-modern-block-fringe nil))
+    :commands (org-modern-mode org-modern-agenda)
+    :init (global-org-modern-mode))
 #+end_src
 
 ** Tangle
@@ -1280,7 +1290,6 @@ Graph view:
       (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
 #+end_src
 
-
 ** Agenda
 
 #+begin_src emacs-lisp
@@ -1307,6 +1316,13 @@ Graph view:
   ;; )
 #+end_src
 
+** Org ref
+#+begin_src emacs-lisp
+  (use-package org-ref
+    :ensure t)
+  ;; (use-package org-ref-ivy
+  ;;   :ensure t)
+#+end_src
 * Elfeed
 
 #+begin_src emacs-lisp
