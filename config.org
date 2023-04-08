@@ -330,7 +330,8 @@ I keep this if I want to use a doom theme
   (use-package doom-themes
     :ensure t)
 
-  (load-theme 'doom-solarized-dark t)
+  ;;(load-theme 'doom-solarized-dark t)
+  (load-theme 'doom-sourcerer t)
   ;; (load-theme 'doom-tomorrow-night t)
   ;; (load-theme 'doom-spacegrey t)
   ;; (load-theme 'doom-gruvbox t)
@@ -1365,6 +1366,7 @@ Graph view:
 #+end_src
 
 * Copilot
+
 #+begin_src emacs-lisp
   ;;   (use-package copilot
   ;;     :straight (:host github :repo "zerolfx/copilot.el"
@@ -1536,6 +1538,7 @@ Graph view:
        (require 'company)
        (global-copilot-mode)))
 #+end_src
+
 * Testing
 ** PDF tools
 #+begin_src emacs-lisp
