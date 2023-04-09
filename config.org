@@ -363,7 +363,7 @@ I keep this if I want to use a doom theme
 
   ;;(load-theme 'zerodark t)
 
-  (zerodark-setup-modeline-format)
+  ;; (zerodark-setup-modeline-format)
 #+end_src
 ** Font
 
